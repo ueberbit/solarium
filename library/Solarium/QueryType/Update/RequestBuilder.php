@@ -127,19 +127,43 @@ class RequestBuilder extends BaseRequestBuilder
             $xml .= '<doc';
             $xml .= $this->attrib('boost', $doc->getBoost());
             $xml .= '>';
+            $fields = $doc->getFields();
+            $types = array(
+              'page',
+              'content',
+              'news',
+              'institution',
+              'contact_person',
+              'media_center_audio',
+              'media_center_image',
+              'media_center_video',
+              'press_article',
+              'webform',
+              'marginalblock',
+            );
+
+
+//            if (isset($fields['dm_5f_field_5f_event_5f_date'])) {
+//              var_dump($fields['dm_5f_field_5f_event_5f_date']);
+//              die(__FILE__ . ' - ' . __LINE__);
+//            }
 
              foreach ($doc->getFields() as $name => $value) {
                 $boost = $doc->getFieldBoost($name);
                 $modifier = $doc->getFieldModifier($name);
                 if (is_array($value)) {
-                    
+
                     foreach ($value as $multival) {
                         if(is_array($multival)){
                             $xml .= '<doc>';
-                            foreach ($multival as $k=>$v) {
-                                if(is_array($v))
-                                    foreach($v as $v2)$xml .= $this->buildFieldXml($k, $boost, $v2, $modifier, $query);
-                                else $xml .= $this->buildFieldXml($k, $boost, $v, $modifier, $query);
+                            foreach ($multival as $multival_key=>$multival_value) {
+                                if (is_array($multival_value)) {
+                                    foreach($multival_value as $multival_sub_value) {
+                                        $xml .= $this->buildFieldXml($multival_key, $boost, $multival_sub_value, $modifier, $query);
+                                    }
+                                } else {
+                                    $xml .= $this->buildFieldXml($multival_key, $boost, $multival_value, $modifier, $query);
+                                }
                             }
                             $xml .= '</doc>';
 
@@ -147,7 +171,7 @@ class RequestBuilder extends BaseRequestBuilder
                             $xml .= $this->buildFieldXml($name, $boost, $multival, $modifier, $query);
                         }
                     }
-                    
+
                 } else {
                     $xml .= $this->buildFieldXml($name, $boost, $value, $modifier, $query);
                 }
